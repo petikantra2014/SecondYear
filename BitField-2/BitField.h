@@ -26,8 +26,12 @@ public:
     BitField operator^(const BitField& tmp);
     bool operator==(const BitField& tmp) const;
     BitField operator~();
+    void Print();
 
     ~BitField(){
-
+        _sizeBit = 0;
+        _memSize = 0;
+        delete[] _mem;
+        _mem = nullptr;
     }
 };
