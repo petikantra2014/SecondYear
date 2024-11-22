@@ -3,17 +3,19 @@
 
 size_t BitField::GetMemIndex(size_t n) const{
     if (n < _sizeBit){
-        return n / (8 * sizeof(uint16_t));
+        size_t ans = n / (sizeof(uint16_t) * 8);
+        return ans;
     }
     throw"Bit out of range";
 }
 uint16_t BitField::GetMask(size_t n) const {
-    return (1 << (n & sizeof(uint16_t)));
+    size_t ans = (n % (sizeof(uint16_t) * 8));
+    return 1 << ans;
 }
 
 BitField::BitField(size_t len) {
     _sizeBit = len;
-    _memSize = _sizeBit / (sizeof(uint16_t) * 16) + (_sizeBit % (16 * sizeof(uint16_t)) != 0);
+    _memSize = (_sizeBit / (sizeof(uint16_t) * 8)) + (_sizeBit % (8 * sizeof(uint16_t)) != 0);
     _mem = new uint16_t[_memSize];
     for (size_t i = 0; i < _memSize; i++)
         _mem[i] = 0;
@@ -35,7 +37,7 @@ BitField& BitField::operator=(const BitField& tmp) {
         delete[] _mem;
         _mem = new uint16_t[_memSize];
     }
-    for (size_t i = 0; i < _memSize; i++)
+    for (size_t i = 0; i < tmp._memSize; i++)
         _mem[i] = tmp._mem[i];
     return *this;
 }
@@ -71,9 +73,8 @@ BitField BitField::operator|(const BitField& tmp) {
 
 BitField BitField::operator&(const BitField& tmp) {
     size_t Size = _sizeBit > tmp._sizeBit ? _sizeBit : tmp._sizeBit;
-    size_t size = _sizeBit < tmp._sizeBit ? _sizeBit : tmp._sizeBit;
     BitField res(Size);
-    for (size_t i = 0; i < size; i++) {
+    for (size_t i = 0; i < Size; i++) {
         res._mem[i] = _mem[i] & tmp._mem[i];
      }
     return res;
@@ -86,19 +87,21 @@ BitField BitField::operator^(const BitField& tmp) {
     return res;
 }
 bool BitField::operator==(const BitField& tmp) const{
-    if (tmp._memSize != _memSize) return false;
+    if (tmp._sizeBit != _sizeBit) {
+        return false;
+    }
+    else {
     for (size_t i = 0; i < tmp._memSize; i++) {
         if (_mem[i] != tmp._mem[i]) return false;
     }
     return true;
+    }
 }
 BitField BitField::operator~(){
     BitField res(_sizeBit);
     for (size_t i = 0; i < _sizeBit; i++) {
-        if (this->GetBit(i) == 0)
-            res.SetBit(i);
-        else
-            res.ClrBit(i);
+        if(GetBit(i)) res.ClrBit(i);
+        else res.SetBit(i);
     }
     return res;
 }
